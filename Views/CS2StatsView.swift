@@ -105,60 +105,15 @@ struct CS2StatsView: View {
     }
 }
 
-struct StatCard<Content: View>: View {
-    let title: String
-    let content: () -> Content
-    
-    init(title: String, @ViewBuilder content: @escaping () -> Content) {
-        self.title = title
-        self.content = content
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(title)
-                .font(.headline)
-                .foregroundColor(.white)
-            
-            content()
-        }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.black.opacity(0.3))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
-        )
-    }
-}
-
-struct StatRow: View {
-    let title: String
-    let value: String
-    let icon: String
-    let color: Color
-    
-    var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(color)
-                .frame(width: 24)
-            
-            Text(title)
-                .foregroundColor(.gray)
-            
-            Spacer()
-            
-            Text(value)
-                .foregroundColor(.white)
-                .bold()
-        }
-    }
-}
-
 #Preview {
-    CS2StatsView(viewModel: SteamViewModel())
+    let mockGame = Game(
+        appid: 730,
+        name: "Counter-Strike 2",
+        playtime_2weeks: 60,
+        playtime_forever: 120,
+        img_icon_url: "",
+        img_logo_url: "",
+        last_played: Int(Date().timeIntervalSince1970)
+    )
+    CS2StatsView(game: mockGame, viewModel: SteamViewModel())
 } 
