@@ -160,5 +160,16 @@ struct StatRow: View {
 }
 
 #Preview {
-    CS2StatsView(viewModel: SteamViewModel())
+    CS2StatsView(
+        game: Game(
+            appid: 730,
+            name: "Counter-Strike 2",
+            playtime_2weeks: 120,
+            playtime_forever: 1000,
+            img_icon_url: "e3f595a92552da3d664ad00277fad2107345f743",
+            img_logo_url: nil,
+            last_played: Int(Date().timeIntervalSince1970)
+        ),
+        viewModel: SteamViewModel()
+    )
 } 

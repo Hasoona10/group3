@@ -237,13 +237,13 @@ class SteamViewModel: ObservableObject {
     @Published var cs2Stats: CS2Stats?
     @Published var isCS2StatsViewPresented = false
     @Published var premierMatches: [PremierMatch] = []
-    @Published var isCS2CombinedViewPresented = false
+    @Published var isPremierMatchesViewPresented = false
     @Published var currentUser: User?
     @Published var isSignedIn = false
     @Published var isAuthenticated = false
     @Published var users: [User] = []
     
-    private let steamAPIKey = "CDF53EA372999EA2A5226F4EEF897D18"
+    private let steamAPIKey = "D02F0BE02D9A9F873D4C9F9E94765BC9"
     private let defaults = UserDefaults.standard
     private let recentSearchesKey = "recentSearches"
     private let lastSearchedIdKey = "lastSearchedId"
@@ -1193,7 +1193,7 @@ class SteamViewModel: ObservableObject {
                     
                     await MainActor.run {
                         self.premierMatches = matchesResponse.matches
-                        self.isCS2CombinedViewPresented = true
+                        self.isPremierMatchesViewPresented = true
                     }
                 } catch {
                     print("Error decoding CS2 matches: \(error)")
@@ -1242,7 +1242,7 @@ class SteamViewModel: ObservableObject {
                 mvp: false
             )
         ]
-        self.isCS2CombinedViewPresented = true
+        self.isPremierMatchesViewPresented = true
     }
     
     // Update signOut function

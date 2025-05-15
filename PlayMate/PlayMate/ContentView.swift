@@ -221,7 +221,7 @@ struct ContentView: View {
             }
             .sheet(isPresented: $viewModel.isCS2StatsViewPresented) {
                 if let game = viewModel.recentGames.first(where: { $0.name.lowercased().contains("counter-strike 2") }) {
-                    CS2StatsView(viewModel: viewModel)
+                    CS2StatsView(game: game, viewModel: viewModel)
                 }
             }
         }

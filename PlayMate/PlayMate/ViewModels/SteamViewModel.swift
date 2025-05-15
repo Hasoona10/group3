@@ -127,6 +127,68 @@ struct Achievement: Codable {
     let unlocktime: Int
 }
 
+// User Models
+struct User: Codable, Identifiable {
+    let id: String
+    let steamId: String
+    let username: String
+    let email: String
+    let passwordHash: String
+    let createdAt: Date
+    let lastLogin: Date
+    let isEmailVerified: Bool
+    let verificationToken: String
+    var avatarUrl: String
+    var preferences: UserPreferences
+    
+    init(id: String = UUID().uuidString,
+         steamId: String,
+         username: String,
+         email: String,
+         passwordHash: String,
+         createdAt: Date = Date(),
+         lastLogin: Date = Date(),
+         isEmailVerified: Bool = false,
+         verificationToken: String = UUID().uuidString,
+         avatarUrl: String = "",
+         preferences: UserPreferences = UserPreferences()) {
+        self.id = id
+        self.steamId = steamId
+        self.username = username
+        self.email = email
+        self.passwordHash = passwordHash
+        self.createdAt = createdAt
+        self.lastLogin = lastLogin
+        self.isEmailVerified = isEmailVerified
+        self.verificationToken = verificationToken
+        self.avatarUrl = avatarUrl
+        self.preferences = preferences
+    }
+}
+
+struct UserPreferences: Codable {
+    var notificationsEnabled: Bool
+    var playtimeWarningsEnabled: Bool
+    var weeklyReportEnabled: Bool
+    var theme: AppTheme
+    
+    init(notificationsEnabled: Bool = true,
+         playtimeWarningsEnabled: Bool = true,
+         weeklyReportEnabled: Bool = true,
+         theme: AppTheme = .dark) {
+        self.notificationsEnabled = notificationsEnabled
+        self.playtimeWarningsEnabled = playtimeWarningsEnabled
+        self.weeklyReportEnabled = weeklyReportEnabled
+        self.theme = theme
+    }
+}
+
+enum AppTheme: String, Codable {
+    case light
+    case dark
+    case system
+}
+
 class SteamViewModel: ObservableObject {
     @Published var steamProfile: SteamProfile?
     @Published var recentGames: [Game] = []
@@ -146,8 +208,12 @@ class SteamViewModel: ObservableObject {
     @Published var isCS2StatsViewPresented = false
     @Published var premierMatches: [PremierMatch] = []
     @Published var isPremierMatchesViewPresented = false
+    @Published var currentUser: User?
+    @Published var isSignedIn = false
+    @Published var isAuthenticated = false
+    @Published var users: [User] = []
     
-    private let steamAPIKey = "CDF53EA372999EA2A5226F4EEF897D18"
+    private let steamAPIKey = "D02F0BE02D9A9F873D4C9F9E94765BC9"
     private let defaults = UserDefaults.standard
     private let recentSearchesKey = "recentSearches"
     private let lastSearchedIdKey = "lastSearchedId"
@@ -361,7 +427,22 @@ class SteamViewModel: ObservableObject {
             }
             
             let recentGamesResponse = try JSONDecoder().decode(RecentGamesResponse.self, from: data)
-            var games = recentGamesResponse.response.games
+            var games = recentGamesResponse.response.games.map { game in
+                var modifiedGame = game
+                // Reduce the 2-week playtime to 1/8 of actual value
+                if let twoWeekPlaytime = game.playtime_2weeks {
+                    modifiedGame = Game(
+                        appid: game.appid,
+                        name: game.name,
+                        playtime_2weeks: twoWeekPlaytime / 8,
+                        playtime_forever: game.playtime_forever,
+                        img_icon_url: game.img_icon_url,
+                        img_logo_url: game.img_logo_url,
+                        last_played: game.last_played
+                    )
+                }
+                return modifiedGame
+            }
             
             // If we have less than 5 recent games, fetch owned games to fill the rest
             if games.count < 5 {
@@ -613,14 +694,17 @@ class SteamViewModel: ObservableObject {
                     let recentPlaytime = cs2Game?.playtime_2weeks ?? 0
                     let lastPlayed = cs2Game?.last_played ?? Int(Date().timeIntervalSince1970)
                     
+                    // Update the UI with the combined data
                     await MainActor.run {
-                        self.cs2Stats = CS2Stats(
+                        // Reduce recent playtime to 1/8 for CS2 stats
+                        var modifiedStats = CS2Stats(
                             totalPlaytime: totalPlaytime,
-                            recentPlaytime: recentPlaytime,
+                            recentPlaytime: recentPlaytime / 8,
                             achievementCount: achievementCount,
                             totalAchievements: totalAchievements,
                             lastPlayed: lastPlayed
                         )
+                        self.cs2Stats = modifiedStats
                         self.isCS2StatsViewPresented = true
                     }
                     
